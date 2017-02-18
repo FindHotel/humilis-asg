@@ -106,7 +106,10 @@ resources:
         Type: "AWS::AutoScaling::LaunchConfiguration"
         DependsOn: InstanceSecurityGroup{{loop.index}}
         Properties:
-            AssociatePublicIpAddress: No
+            # We need to associate a public IP address or the instance 
+            # will not be able to access the internet. A better alternative
+            # would be to set up a NAT, but for now this will do.
+            AssociatePublicIpAddress: Yes
             # BlockDeviceMappings: TBD
             EbsOptimized: {{ebs_optimized}}
             ImageId: {{image_id}}
