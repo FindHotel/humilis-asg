@@ -1,0 +1,10 @@
+# test requirements
+boto3
+pytest
+pyyaml
+mock
+tox
+
+-e .
+git+https://github.com/humilis/humilis
+git+https://github.com/humilis/humilis-vpc

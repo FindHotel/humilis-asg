@@ -1,0 +1,205 @@
+---
+resources:
+    # An S3 bucket is needed to store the access logs
+    Bucket:
+        Type: "AWS::S3::Bucket"
+        Properties: {}
+
+    # For ASG notifications
+    NotificationTopic:
+        Type: "AWS::SNS::Topic"
+
+
+    ElbSecurityGroup:
+        Type: "AWS::EC2::SecurityGroup"
+        Properties:
+            GroupDescription: Security group for the ELBs of environment {{_env.name}}
+            VpcId: {{vpc}}
+            Tags:
+                - Key: Name
+                  Value: {{_env.name}}-{{_env.stage.lower()}}-elb-sg
+            SecurityGroupIngress:
+                {% for ip in ip_whitelist %}
+                {% for listener in listeners %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.port}}
+                  ToPort: {{listener.port}}
+                  CidrIp: {{ip}}
+                {% endfor %}
+                - IpProtocol: icmp
+                  FromPort: -1
+                  ToPort: -1
+                  CidrIp: {{ip}}
+                {% endfor %}
+
+    S3LoggingBucketPolicy:
+        Type: "AWS::S3::BucketPolicy"
+        Properties:
+            Bucket:
+                Ref: Bucket
+            PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - Sid: ELBAccessLogs
+                      Effect: Allow
+                      Resource:
+                        "Fn::Join":
+                            - ""
+                            -
+                                - "arn:aws:s3:::"
+                                - Ref: Bucket
+                                - "/*"
+                      Principal:
+                        "AWS":
+                            - { "Fn::FindInMap" : [ "ElbAccountIdMap", { "Ref" : "AWS::Region" }, "AccountId"]}
+                      Action:
+                        "s3:*"
+
+    {% for subnet in subnets %}
+    InstanceSecurityGroup{{loop.index}}:
+        Type: "AWS::EC2::SecurityGroup"
+        Properties:
+            GroupDescription: Security group for the EC2 instances in environment {{_env.name}}
+            VpcId: {{vpc}}
+            Tags:
+                - Key: Name
+                  Value: {{_env.name}}-{{_env.stage.lower()}}-ec2-sg
+            SecurityGroupIngress:
+                {% set outer_loop = loop %}
+                {% for listener in listeners %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.port}}
+                  ToPort: {{listener.port}}
+                  SourceSecurityGroupId: {"Ref": "ElbSecurityGroup"}
+                - IpProtocol: icmp
+                  FromPort: -1
+                  ToPort: -1
+                  SourceSecurityGroupId: {"Ref": "ElbSecurityGroup"}
+                {% endfor %}
+
+    AsgLaunchConfiguration{{loop.index}}:
+        Type: "AWS::AutoScaling::LaunchConfiguration"
+        DependsOn: InstanceSecurityGroup{{loop.index}}
+        Properties:
+            AssociatePublicIpAddress: No
+            # BlockDeviceMappings: TBD
+            EbsOptimized: {{ebs_optimized}}
+            ImageId: {{image_id}}
+            InstanceType: {{instance_type}}
+            KeyName: {{key_name}}
+            SecurityGroups:
+                - Ref: InstanceSecurityGroup{{loop.index}}
+            {% if spot_price %}
+            SpotPrice: {{spot_price}}
+            {% endif %}
+
+    {% if domain %}
+    # A SSL certificate for HTTPS
+    ElbCert{{loop.index}}:
+        Type: "AWS::CertificateManager::Certificate"
+        Properties:
+            DomainName:
+                "Fn::Join":
+                    - "."
+                    -
+                      - {{_env.name}}
+                      - {{_env.stage.lower()}}
+                      - {{loop.index}}
+                      - Ref: "AWS::Region"
+                      - {{domain}}
+
+    ElbDnsRecord{{loop.index}}:
+        Type: "AWS::Route53::RecordSet"
+        Properties:
+            {% if hosted_zone_id %}
+            HostedZoneId: {{hosted_zone_id}}
+            {% else %}
+            HostedZoneName: {{domain}}.
+            {% endif %}
+            Comment: DNS name for ELB in subnet {{subnet}}
+            Name:
+                {% if subdomain %}
+                "{{subdomain}}.{{domain}}"
+                {% else %}
+                "Fn::Join":
+                    - "."
+                    -
+                      - {{_env.name}}
+                      - {{_env.stage.lower()}}
+                      - {{loop.index}}
+                      - Ref: "AWS::Region"
+                      - {{domain}}
+                {% endif %}
+            Type: A
+            TTL: 900
+            ResourceRecords:
+                -
+                  "Fn::GetAtt":
+                    - Elb{{loop.index}}
+                    - DNSName
+    {% endif %}
+    Elb{{loop.index}}:
+        Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+        DependsOn: S3LoggingBucketPolicy
+        Properties:
+            AccessLoggingPolicy:
+                EmitInterval: 60
+                Enabled: {{logging_enabled}}
+                S3BucketName:
+                    Ref: Bucket
+                S3BucketPrefix:
+                    "elb-logs/elb{{loop.index}}"
+            Listeners:
+                {% for listener in listeners %}
+                {% if not (listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') and not domain) %}
+                - InstancePort: {{listener.port}}
+                  InstanceProtocol: {{listener.protocol}}
+                  LoadBalancerPort: {{listener.port}}
+                  Protocol: {{listener.protocol}}
+                  {% if listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') %}
+                  SSLCertificateId:
+                      Ref: ElbCert{{outer_loop.index}}
+                  {% endif %}
+                {% endif %}
+                {% endfor %}
+
+            Scheme:
+                {% if public %}
+                internet-facing
+                {% else %}
+                internal
+                {% endif %}
+            SecurityGroups:
+                - Ref: ElbSecurityGroup
+            Subnets:
+                - {{subnet}}
+            HealthCheck:
+                Target: "HTTP:80/"
+                HealthyThreshold: 3
+                UnhealthyThreshold: 5
+                Interval: 30
+                Timeout: 5
+            ConnectionSettings:
+                IdleTimeout: {{idle_timeout}}
+
+    Asg{{loop.index}}:
+        Type: "AWS::AutoScaling::AutoScalingGroup"
+        Properties:
+            DesiredCapacity: {{desired_capacity}}
+            LaunchConfigurationName:
+                Ref: AsgLaunchConfiguration{{loop.index}}
+            LoadBalancerNames:
+                - Ref: Elb{{loop.index}}
+            MaxSize: {{maximum_capacity}}
+            MinSize: {{minimum_capacity}}
+            VPCZoneIdentifier:
+                - {{subnet}}
+            NotificationConfiguration:
+                TopicARN:
+                    Ref: NotificationTopic
+                NotificationTypes:
+                    - "autoscaling:EC2_INSTANCE_LAUNCH"
+                    - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
+                    - "autoscaling:EC2_INSTANCE_TERMINATE"
+                    - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+    {% endfor %}

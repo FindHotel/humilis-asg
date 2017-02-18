@@ -1,0 +1,39 @@
+---
+humilis-asg:
+    description:
+        A dummy environment used for testing the ASG plugin.
+
+    layers:
+        - layer: vpc
+          layer_type: vpc
+
+        - layer: asg
+          layer_type: asg
+          key_name: deployment
+          vpc:
+              ref:
+                  parser: layer_output
+                  parameters:
+                      layer_name: vpc
+                      output_name: VpcId
+          subnets:
+              - ref:
+                  parser: layer_output
+                  parameters:
+                      layer_name: vpc
+                      output_name: PublicSubnet1
+
+          # Can't deploy automatically a SSL certificate because it
+          # requires a validation email to the certified domain.
+          # domain: {{BASTION_DOMAIN or 'fih.io'}}
+          # hosted_zone_id: ZA1RMNBD0PCSQ
+          image_id:
+              ref:
+                  parser: boto3
+                  parameters:
+                     service: ec2
+                     call:
+                         method: get_ami_by_name
+                         args:
+                             - {{BASTION_AMI or "ubuntu-bastion-1483012150"}}
+                     output_attribute: id
