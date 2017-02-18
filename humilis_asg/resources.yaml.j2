@@ -38,7 +38,25 @@ resources:
                   ToPort: -1
                   CidrIp: {{ip}}
                 {% endfor %}
-
+                {% for sg in sg_whitelist %}
+                {% for listener in listeners %}
+                {% if listener.elb_port %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.elb_port}}
+                  ToPort: {{listener.elb_port}}
+                  SourceSecurityGroupId: {{sg}}
+                {% else %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.port}}
+                  ToPort: {{listener.port}}
+                  SourceSecurityGroupId: {{sg}}
+                {% endif %}
+                {% endfor %}
+                - IpProtocol: icmp
+                  FromPort: -1
+                  ToPort: -1
+                  SourceSecurityGroupId: {{sg}}
+                {% endfor %}
     S3LoggingBucketPolicy:
         Type: "AWS::S3::BucketPolicy"
         Properties:

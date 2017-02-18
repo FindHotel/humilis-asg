@@ -26,9 +26,14 @@ meta:
 
         ip_whitelist:
             description:
-                The whitelisted IPs that will be able to access the load balancer
+                The whitelisted IPs that will be able to access the ELB
             value:
                 - 0.0.0.0/0
+
+        sg_whitelist:
+            description:
+                The list of security groups that will be given access to the ELB
+            value: []
 
         listeners:
             description:
