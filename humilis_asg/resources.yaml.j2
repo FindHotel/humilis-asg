@@ -21,10 +21,17 @@ resources:
             SecurityGroupIngress:
                 {% for ip in ip_whitelist %}
                 {% for listener in listeners %}
+                {% if listener.elb_port %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.elb_port}}
+                  ToPort: {{listener.elb_port}}
+                  CidrIp: {{ip}}
+                {% else %}
                 - IpProtocol: tcp
                   FromPort: {{listener.port}}
                   ToPort: {{listener.port}}
                   CidrIp: {{ip}}
+                {% endif %}
                 {% endfor %}
                 - IpProtocol: icmp
                   FromPort: -1
@@ -154,7 +161,11 @@ resources:
                 {% if not (listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') and not domain) %}
                 - InstancePort: {{listener.port}}
                   InstanceProtocol: {{listener.protocol}}
+                  {% if listener.elb_port %}
+                  LoadBalancerPort: {{listener.elb_port}}
+                  {% else %}
                   LoadBalancerPort: {{listener.port}}
+                  {% endif %}
                   Protocol: {{listener.protocol}}
                   {% if listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') %}
                   SSLCertificateId:
@@ -174,7 +185,7 @@ resources:
             Subnets:
                 - {{subnet}}
             HealthCheck:
-                Target: "HTTP:80/"
+                Target: {{health_check_target}} 
                 HealthyThreshold: 3
                 UnhealthyThreshold: 5
                 Interval: 30

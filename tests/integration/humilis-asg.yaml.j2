@@ -23,6 +23,11 @@ humilis-asg:
                       layer_name: vpc
                       output_name: PublicSubnet1
 
+          health_check_target: "TCP:22"
+
+          instance_type: m4.large
+          bid: 0.03
+
           # Can't deploy automatically a SSL certificate because it
           # requires a validation email to the certified domain.
           # domain: {{BASTION_DOMAIN or 'fih.io'}}

@@ -39,7 +39,7 @@ update: develop
 	$(HUMILIS) update \
 		--stage $(STAGE) \
 		--output $(HUMILIS_ENV)-$(STAGE).outputs.yaml \
-		$(HUMILIS_ENV).yaml.j2
+		$(HUMILIS_ENV_PATH)$(HUMILIS_ENV).yaml.j2
 
 # delete the test deployment
 delete: develop
