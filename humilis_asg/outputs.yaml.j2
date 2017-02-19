@@ -23,8 +23,11 @@ outputs:
         Description:
             The DNS name of the ELB in subnet {{subnet}}.
         Value:
-            Ref:
-                ElbDnsRecord{{loop.index}}
+            {% if subdomain %}
+            "{{subdomain}}.{{domain}}"
+            {% else %}
+            "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}-{{loop.index}}.{{domain}}"
+            {% endif %}
     {% else %}
     Elb{{loop.index}}RawDnsName:
         Description:

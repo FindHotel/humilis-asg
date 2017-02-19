@@ -6,5 +6,4 @@ mock
 tox
 
 -e .
-git+https://github.com/humilis/humilis
 git+https://github.com/humilis/humilis-vpc
