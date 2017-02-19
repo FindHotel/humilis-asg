@@ -80,6 +80,15 @@ resources:
                       Action:
                         "s3:*"
 
+    {% if domain and not ssl_certificate_id %}
+    # Create a SSL certificate for HTTPS
+    ElbCert:
+        Type: "AWS::CertificateManager::Certificate"
+        Properties:
+            DomainName:
+                "*.{{domain}}"
+    {% endif %}
+
     {% for subnet in subnets %}
     InstanceSecurityGroup{{loop.index}}:
         Type: "AWS::EC2::SecurityGroup"
@@ -122,13 +131,6 @@ resources:
             {% endif %}
 
     {% if domain %}
-    # A SSL certificate for HTTPS
-    ElbCert{{loop.index}}:
-        Type: "AWS::CertificateManager::Certificate"
-        Properties:
-            DomainName:
-                "*.{{domain}}"
-
     ElbDnsRecord{{loop.index}}:
         Type: "AWS::Route53::RecordSet"
         Properties:
@@ -202,7 +204,11 @@ resources:
                   Protocol: {{listener.protocol}}
                   {% if listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') %}
                   SSLCertificateId:
-                      Ref: ElbCert{{outer_loop.index}}
+                      {% if ssl_certificate_id %}
+                      {{ssl_certificate_id}}
+                      {% else %}
+                      Ref: ElbCert
+                      {% endif %}
                   {% endif %}
                 {% endif %}
                 {% endfor %}
