@@ -218,6 +218,10 @@ resources:
         Type: "AWS::AutoScaling::AutoScalingGroup"
         Properties:
             DesiredCapacity: {{desired_capacity}}
+            Tags:
+                - Key: Name
+                  Value: "{{_env.name}}-{{_env.stage}}-{{_layer.name}}
+                  PropagateAtLaunch: yes
             LaunchConfigurationName:
                 Ref: AsgLaunchConfiguration{{loop.index}}
             LoadBalancerNames:
