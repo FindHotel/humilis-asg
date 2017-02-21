@@ -57,6 +57,23 @@ resources:
                   ToPort: -1
                   SourceSecurityGroupId: {{sg}}
                 {% endfor %}
+                {% for listener in listeners %}
+                {% if listener.elb_port %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.elb_port}}
+                  ToPort: {{listener.elb_port}}
+                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
+                {% else %}
+                - IpProtocol: tcp
+                  FromPort: {{listener.port}}
+                  ToPort: {{listener.port}}
+                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
+                {% endif %}
+                {% endfor %}
+                - IpProtocol: icmp
+                  FromPort: -1
+                  ToPort: -1
+                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
     S3LoggingBucketPolicy:
         Type: "AWS::S3::BucketPolicy"
         Properties:
