@@ -1,7 +1,7 @@
 Humilis plug-in to deploy an Autoscaling Group
 ===================================================
 
-[![PyPI](https://img.shields.io/pypi/v/humilis-asg.svg?style=flat)](https://pypi.python.org/pypi/humilis-bastion)
+[![PyPI](https://img.shields.io/pypi/v/humilis-asg.svg?style=flat)](https://pypi.python.org/pypi/humilis-asg)
 
 A [humilis][humilis] plug-in layer that deploys an Autoscaling Group. 
 
@@ -12,7 +12,7 @@ A [humilis][humilis] plug-in layer that deploys an Autoscaling Group.
 
 
 ```
-pip install humilis-bastion
+pip install humilis-asg
 ```
 
 
@@ -48,11 +48,8 @@ You can test the deployment with:
 make test
 ```
 
-The test suite will create various AWS resources that are required to support
-the creation of the bastion host (e.g. a VPC and a public subnet). Those
-resources will be automatically destroyed after the tests have run, but you
-can make sure you are not leaving any infrastructure behind by manually
-running:
+If the tests break you can make sure you are not leaving any infrastructure
+behind with:
 
 ```bash
 make delete
@@ -82,7 +79,7 @@ This software is licensed under the [MIT license][mit].
 
 See [License file][LICENSE].
 
-[LICENSE]: https://github.com/humilis/humilis-bastion/blob/master/LICENSE.txt
+[LICENSE]: https://github.com/humilis/humilis-asg/blob/master/LICENSE.txt
 
 
 © 2016 German Gomez-Herrero, [Find Hotel][fh] and others.
