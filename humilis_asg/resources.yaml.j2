@@ -57,23 +57,7 @@ resources:
                   ToPort: -1
                   SourceSecurityGroupId: {{sg}}
                 {% endfor %}
-                {% for listener in listeners %}
-                {% if listener.elb_port %}
-                - IpProtocol: tcp
-                  FromPort: {{listener.elb_port}}
-                  ToPort: {{listener.elb_port}}
-                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
-                {% else %}
-                - IpProtocol: tcp
-                  FromPort: {{listener.port}}
-                  ToPort: {{listener.port}}
-                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
-                {% endif %}
-                {% endfor %}
-                - IpProtocol: icmp
-                  FromPort: -1
-                  ToPort: -1
-                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
+
     S3LoggingBucketPolicy:
         Type: "AWS::S3::BucketPolicy"
         Properties:
@@ -106,8 +90,7 @@ resources:
                 "*.{{domain}}"
     {% endif %}
 
-    {% for subnet in subnets %}
-    InstanceSecurityGroup{{loop.index}}:
+    InstanceSecurityGroup:
         Type: "AWS::EC2::SecurityGroup"
         Properties:
             GroupDescription: Security group for the EC2 instances in environment {{_env.name}}
@@ -116,7 +99,6 @@ resources:
                 - Key: Name
                   Value: {{_env.name}}-{{_env.stage.lower()}}-ec2-sg
             SecurityGroupIngress:
-                {% set outer_loop = loop %}
                 {% for listener in listeners %}
                 - IpProtocol: tcp
                   FromPort: {{listener.port}}
@@ -128,9 +110,9 @@ resources:
                   SourceSecurityGroupId: {"Ref": "ElbSecurityGroup"}
                 {% endfor %}
 
-    AsgLaunchConfiguration{{loop.index}}:
+    AsgLaunchConfiguration:
         Type: "AWS::AutoScaling::LaunchConfiguration"
-        DependsOn: InstanceSecurityGroup{{loop.index}}
+        DependsOn: InstanceSecurityGroup
         Properties:
             # We need to associate a public IP address or the instance 
             # will not be able to access the internet. A better alternative
@@ -142,13 +124,13 @@ resources:
             InstanceType: {{instance_type}}
             KeyName: {{key_name}}
             SecurityGroups:
-                - Ref: InstanceSecurityGroup{{loop.index}}
+                - Ref: InstanceSecurityGroup
             {% if spot_price %}
             SpotPrice: {{spot_price}}
             {% endif %}
 
     {% if domain %}
-    ElbDnsRecord{{loop.index}}:
+    ElbDnsRecord:
         Type: "AWS::Route53::RecordSet"
         Properties:
             {% if hosted_zone_id %}
@@ -161,16 +143,16 @@ resources:
                 {% if subdomain %}
                 "{{subdomain}}.{{domain}}"
                 {% else %}
-                "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}-{{loop.index}}.{{domain}}"
+                "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}.{{domain}}"
                 {% endif %}
             Type: A
             TTL: 900
             ResourceRecords:
                 -
                   "Fn::GetAtt":
-                    - Elb{{loop.index}}
+                    - Elb
                     - DNSName
-    ElbDnsRecord{{loop.index}}:
+    ElbDnsRecord:
       Type: AWS::Route53::RecordSetGroup
       Properties:
         {% if hosted_zone_id %}
@@ -184,20 +166,20 @@ resources:
                 {% if subdomain %}
                 "{{subdomain}}.{{domain}}"
                 {% else %}
-                "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}-{{loop.index}}.{{domain}}"
+                "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}.{{domain}}"
                 {% endif %}
               Type: A
               AliasTarget:
                 HostedZoneId:
                     "Fn::GetAtt":
-                        - Elb{{loop.index}}
+                        - Elb
                         - CanonicalHostedZoneNameID
                 DNSName:
                     "Fn::GetAtt":
-                        - Elb{{loop.index}}
+                        - Elb
                         - DNSName
     {% endif %}
-    Elb{{loop.index}}:
+    Elb:
         Type: "AWS::ElasticLoadBalancing::LoadBalancer"
         DependsOn: S3LoggingBucketPolicy
         Properties:
@@ -207,7 +189,7 @@ resources:
                 S3BucketName:
                     Ref: Bucket
                 S3BucketPrefix:
-                    "elb-logs/elb{{loop.index}}"
+                    "elb-logs/elb"
             Listeners:
                 {% for listener in listeners %}
                 {% if not (listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') and not domain) %}
@@ -249,7 +231,7 @@ resources:
             ConnectionSettings:
                 IdleTimeout: {{idle_timeout}}
 
-    Asg{{loop.index}}:
+    Asg:
         Type: "AWS::AutoScaling::AutoScalingGroup"
         Properties:
             DesiredCapacity: {{desired_capacity}}
@@ -258,9 +240,9 @@ resources:
                   Value: "{{_env.name}}-{{_env.stage}}-{{_layer.name}}"
                   PropagateAtLaunch: yes
             LaunchConfigurationName:
-                Ref: AsgLaunchConfiguration{{loop.index}}
+                Ref: AsgLaunchConfiguration
             LoadBalancerNames:
-                - Ref: Elb{{loop.index}}
+                - Ref: Elb
             MaxSize: {{maximum_capacity}}
             MinSize: {{minimum_capacity}}
             VPCZoneIdentifier:
@@ -273,4 +255,3 @@ resources:
                     - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
                     - "autoscaling:EC2_INSTANCE_TERMINATE"
                     - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
-    {% endfor %}
