@@ -120,7 +120,7 @@ resources:
             AssociatePublicIpAddress: Yes
             # BlockDeviceMappings: TBD
             EbsOptimized: {{ebs_optimized}}
-            ImageId: {{image_id}}
+            ImageId: {{ami_id or image_id}}
             InstanceType: {{instance_type}}
             KeyName: {{key_name}}
             SecurityGroups:
@@ -138,7 +138,7 @@ resources:
         {% else %}
         HostedZoneName: {{domain}}.
         {% endif %}
-        Comment: DNS name for ELB in subnet {{subnet}}
+        Comment: DNS name for ELB in subnet {{subnet_id or subnet}}
         RecordSets:
             - Name:
                 {% if subdomain %}
@@ -199,7 +199,7 @@ resources:
             SecurityGroups:
                 - Ref: ElbSecurityGroup
             Subnets:
-                - {{subnet}}
+                - {{subnet_id or subnet}}
             HealthCheck:
                 Target: {{health_check_target}} 
                 HealthyThreshold: 3
@@ -224,7 +224,7 @@ resources:
             MaxSize: {{maximum_capacity}}
             MinSize: {{minimum_capacity}}
             VPCZoneIdentifier:
-                - {{subnet}}
+                - {{subnet_id or subnet}}
             NotificationConfiguration:
                 TopicARN:
                     Ref: NotificationTopic

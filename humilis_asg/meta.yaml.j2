@@ -9,11 +9,25 @@ meta:
                 The ID of the target VPC
             value:
 
-        subnet:
+        subnet_id:
             description:
-                The IDs of the target subnet.
+                The ID of the target subnet.
             value:
 
+
+        # For backwards compatibility, use subnet_id instead 
+        subnet:
+            description:
+                The ID of the target subnet.
+            value:
+
+        ami_id:
+            description:
+                The AMI ID
+            value:
+
+
+        # For backwards compatibility, use ami_id instead
         image_id:
             description:
                 The AMI ID
