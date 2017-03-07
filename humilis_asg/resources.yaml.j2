@@ -14,7 +14,7 @@ resources:
         Type: "AWS::EC2::SecurityGroup"
         Properties:
             GroupDescription: Security group for the ELBs of environment {{_env.name}}
-            VpcId: {{vpc}}
+            VpcId: {{vpc_id or vpc}}
             Tags:
                 - Key: Name
                   Value: {{_env.name}}-{{_env.stage.lower()}}-elb-sg
@@ -94,7 +94,7 @@ resources:
         Type: "AWS::EC2::SecurityGroup"
         Properties:
             GroupDescription: Security group for the EC2 instances in environment {{_env.name}}
-            VpcId: {{vpc}}
+            VpcId: {{vpc_id or vpc}}
             Tags:
                 - Key: Name
                   Value: {{_env.name}}-{{_env.stage.lower()}}-ec2-sg

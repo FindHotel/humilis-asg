@@ -4,6 +4,12 @@ meta:
         Autoscaling Group behind a Load Balancer
 
     parameters:
+        vpc_id:
+            description:
+                The ID of the target VPC
+            value:
+
+        # For backwards compatibility, use vpc_id instead
         vpc:
             description:
                 The ID of the target VPC
