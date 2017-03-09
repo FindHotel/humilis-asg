@@ -118,7 +118,7 @@ resources:
             IpProtocol: -1
             FromPort: -1
             ToPort: -1
-            SourceSecurityGroupName: {Ref: InstanceSecurityGroup}
+            SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
 
     AsgLaunchConfiguration:
         Type: "AWS::AutoScaling::LaunchConfiguration"
