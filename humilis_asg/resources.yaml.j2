@@ -113,9 +113,8 @@ resources:
     # Allow all traffic between the instances in the ASG
     InstanceSecurityGroupIngress:
         Type: "AWS::EC2::SecurityGroupIngress"
-        DependsOn: InstanceSecurityGroup
         Properties:
-            GroupName: {Ref: InstanceSecurityGroup}
+            GroupId: {Ref: InstanceSecurityGroup}
             IpProtocol: -1
             FromPort: -1
             ToPort: -1
