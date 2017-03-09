@@ -110,6 +110,16 @@ resources:
                   SourceSecurityGroupId: {"Ref": "ElbSecurityGroup"}
                 {% endfor %}
 
+    # Allow all traffic between the instances in the ASG
+    InstanceSecurityGroupIngress:
+        Type: "AWS::EC2::SecurityGroupIngress"
+        Properties:
+            GroupName: {Ref: InstanceSecurityGroup}
+            IpProtocol: -1
+            FromPort: -1
+            ToPort: -1
+            SourceSecurityGroupName: {Ref: InstanceSecurityGroup}
+
     AsgLaunchConfiguration:
         Type: "AWS::AutoScaling::LaunchConfiguration"
         DependsOn: InstanceSecurityGroup
