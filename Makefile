@@ -43,7 +43,7 @@ update: develop
 
 # delete the test deployment
 delete: develop
-	./cleanup.py $(HUMILIS_ENV_PATH)$(HUMILIS_ENV).yaml.j2 $(STAGE)
+	$(PYTHON) ./cleanup.py $(HUMILIS_ENV_PATH)$(HUMILIS_ENV).yaml.j2 $(STAGE)
 
 # upload to Pypi
 pypi: develop
