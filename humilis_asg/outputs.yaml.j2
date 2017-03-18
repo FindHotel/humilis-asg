@@ -36,3 +36,10 @@ outputs:
                 - Elb
                 - DNSName
     {% endif %}
+    {% if has_efs %}
+    FileSystem:
+        Description:
+            Physical ID of the Elastic File Instance
+        Value:
+            Ref: FileSystem
+    {% endif %}

@@ -1,4 +1,14 @@
 ---
+# A nice name to identify the instance
+{% if domain %}
+{% if subdomain %}
+{% set instance_name = subdomain + "." + domain %}
+{% else %}
+{% set instance_name = _env.name + "-" + _env.stage.lower() + "-" + _layer.name + "." + domain %}
+{% endif %}
+{% else %}
+{% set instance_name = _env.name + "-" + _env.stage.lower() + "-" + _layer.name %}
+{% endif %}
 resources:
     # An S3 bucket is needed to store the access logs
     Bucket:
@@ -150,12 +160,7 @@ resources:
         {% endif %}
         Comment: DNS name for ELB in subnet {{subnet_id or subnet}}
         RecordSets:
-            - Name:
-                {% if subdomain %}
-                "{{subdomain}}.{{domain}}"
-                {% else %}
-                "{{_env.name}}-{{_env.stage.lower()}}-{{_layer.name}}.{{domain}}"
-                {% endif %}
+            - Name: "{{instance_name}}"
               Type: A
               AliasTarget:
                 HostedZoneId:
@@ -225,7 +230,7 @@ resources:
             DesiredCapacity: {{desired_capacity}}
             Tags:
                 - Key: Name
-                  Value: "{{_env.name}}-{{_env.stage}}-{{_layer.name}}"
+                  Value: {{instance_name}}
                   PropagateAtLaunch: yes
             LaunchConfigurationName:
                 Ref: AsgLaunchConfiguration
@@ -243,3 +248,32 @@ resources:
                     - "autoscaling:EC2_INSTANCE_LAUNCH_ERROR"
                     - "autoscaling:EC2_INSTANCE_TERMINATE"
                     - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
+
+    {% if not efs_id and has_efs %}
+    FileSystem:
+        Type: "AWS::EFS::FileSystem"
+        Properties:
+            PerformanceMode: generalPurpose
+            FileSystemTags:
+                - Key: Name
+                  Value: "{{instance_name}}"
+
+    MountTargetSecurityGroup:
+        Type: "AWS::EC2::SecurityGroup"
+        Properties:
+            VpcId: {{vpc_id}}
+            GroupDescription: "{{instance_name}} EFS secgroup"
+            SecurityGroupIngress:
+                - IpProtocol: tcp
+                  FromPort: 2049
+                  ToPort: 2049
+                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
+
+    MountTarget:
+      Type: "AWS::EFS::MountTarget"
+      Properties:
+        FileSystemId: {Ref: FileSystem}
+        # The subnet parameter was deprecated for the subnet_id parameter
+        SubnetId: {{subnet_id or subnet}}
+        SecurityGroups: [{Ref: MountTargetSecurityGroup}]
+    {% endif %}
