@@ -148,9 +148,21 @@ resources:
             {% if spot_price %}
             SpotPrice: {{spot_price}}
             {% endif %}
-            {% if user_data %}
+            {% if efs_mount_point %}
             UserData:
-                "Fn::Base64": "{{user_data}}"
+                "Fn::Base64":
+                    "Fn::Join":
+                        - ""
+                        -
+                            - |
+                                sudo makedir {{efs_mount_point}}
+                                sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2 
+                            - {Ref: FileSystem}
+                            - .efs.
+                            - {Ref: "AWS::Region"}
+                            - |
+                                .amazonaws.com:/   {{efs_mount_point}}
+                                sudo chown $(whoami):$(whoami) {{efs_mount_point}}
             {% endif %}
 
     {% if domain %}
@@ -253,7 +265,7 @@ resources:
                     - "autoscaling:EC2_INSTANCE_TERMINATE"
                     - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
 
-    {% if not efs_id and has_efs %}
+    {% if efs_mount_point %}
     FileSystem:
         Type: "AWS::EFS::FileSystem"
         Properties:
@@ -265,7 +277,7 @@ resources:
     MountTargetSecurityGroup:
         Type: "AWS::EC2::SecurityGroup"
         Properties:
-            VpcId: {{vpc_id}}
+            VpcId: {{vpc_id or vpc}}
             GroupDescription: "{{instance_name}} EFS secgroup"
             SecurityGroupIngress:
                 - IpProtocol: tcp

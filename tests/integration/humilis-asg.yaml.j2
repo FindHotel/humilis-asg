@@ -10,21 +10,17 @@ humilis-asg:
         - layer: asg
           layer_type: asg
           key_name: deployment
-          vpc:
+          vpc_id:
               $layer_output: {layer_name: vpc, output_name: VpcId}
-          subnets:
-              - $layer_output: {layer_name: vpc, output_name: PublicSubnet1}
+          subnet_id:
+              $layer_output: {layer_name: vpc, output_name: PublicSubnet1}
           health_check_target: "TCP:22"
           instance_type: m4.large
           bid: 0.03
           subdomain: humilis-asg
           domain: fih.io
           hosted_zone_id: ZA1RMNBD0PCSQ
-          user_data: |
-              #!/usr/bin/env bash
-              apt-get -y update
-              apt-get -y upgrade
-
+          efs_mount_point: /efs
           image_id:
               $boto3:
                  service: ec2
