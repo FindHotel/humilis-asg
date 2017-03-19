@@ -148,6 +148,10 @@ resources:
             {% if spot_price %}
             SpotPrice: {{spot_price}}
             {% endif %}
+            {% if user_data %}
+            UserData:
+                "Fn::Base64": "{{user_data}}"
+            {% endif %}
 
     {% if domain %}
     ElbDnsRecord:

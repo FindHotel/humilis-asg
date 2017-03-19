@@ -20,6 +20,11 @@ humilis-asg:
           subdomain: humilis-asg
           domain: fih.io
           hosted_zone_id: ZA1RMNBD0PCSQ
+          user_data: |
+              #!/usr/bin/env bash
+              apt-get -y update
+              apt-get -y upgrade
+
           image_id:
               $boto3:
                  service: ec2
