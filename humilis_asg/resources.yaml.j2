@@ -241,6 +241,9 @@ resources:
 
     Asg:
         Type: "AWS::AutoScaling::AutoScalingGroup"
+        {% if efs_mount_point %}
+        DependsOn: FileSystem
+        {% endif %}
         Properties:
             DesiredCapacity: {{desired_capacity}}
             Tags:
