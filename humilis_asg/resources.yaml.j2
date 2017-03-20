@@ -10,7 +10,7 @@
 {% set instance_name = _env.name + "-" + _env.stage.lower() + "-" + _layer.name %}
 {% endif %}
 {% if efs_owner and not efs_mount_point %}
-{% efs_mount_point = "/efs" %}
+{% set efs_mount_point = "/efs" %}
 {% endif %}
 resources:
     # An S3 bucket is needed to store the access logs
