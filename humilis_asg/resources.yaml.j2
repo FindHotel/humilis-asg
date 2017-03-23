@@ -170,6 +170,11 @@ resources:
                             {% else %}
                             - "sudo chown $(whoami):$(whoami) {{efs_mount_point}}\n"
                             {% endif %}
+                            {% if bootstrap_s3_path %}
+                            - "mydir=$(mktemp -d \"${TMPDIR:-/tmp/}$(basename 0).XXXXXXXXXXXX\")\n"
+                            - "aws s3 cp s3://{{bootstrap_s3_path.s3bucket}}/{{bootstrap_s3_path.s3key}} $(mydir)/bootstrap.sh\n"
+                            - "sudo /bin/bash -ex $(mydir)/bootstrap.sh\n"
+                            {% endif %}
             {% endif %}
 
     {% if domain %}

@@ -162,6 +162,17 @@ meta:
             value:
 
 
+        bootstrap_s3_path:
+            description:
+                The S3 location of the bootstrapping Bash script
+            value:
+                {% if bootstrap_path %}
+                # Horrible horrible hack... please fix it
+                $file:
+                    path: {{_env.basedir}}/{{bootstrap_path}}
+                {% endif %}
+
+
         efs_owner:
             description:
                 The username that will own the EFS. If not provided, the EFS
