@@ -343,16 +343,16 @@ resources:
       Type: "AWS::AutoScaling::ScheduledAction"
       Properties:
         AutoScalingGroupName: {Ref: Asg}
-        {% if action.max_size %}
+        {% if action.max_size is defined %}
         MaxSize: {{action.max_size}}
         {% endif %}
-        {% if action.min_size %}
+        {% if action.min_size is defined %}
         MinSize: {{action.min_size}}
         {% endif %}
-        {% if action.desired_capacity %}
+        {% if action.desired_capacity is defined %}
         DesiredCapacity: {{action.desired_capacity}}
         {% endif %}
-        {% if action.recurrence %}
+        {% if action.recurrence is defined %}
         Recurrence: {{action.recurrence}}
         {% endif %}
     {% endfor %}
