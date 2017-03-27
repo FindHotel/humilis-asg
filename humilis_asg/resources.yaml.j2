@@ -13,15 +13,42 @@
 {% set efs_mount_point = "/efs" %}
 {% endif %}
 resources:
-    # An S3 bucket is needed to store the access logs
+    # An S3 bucket to store ELB access logs
     Bucket:
         Type: "AWS::S3::Bucket"
         Properties: {}
 
+    IamRole:
+        Type: "AWS::IAM::Role"
+        Properties:
+            AssumeRolePolicyDocument: 
+                Version: "2012-10-17"
+                Statement:
+                  -
+                    Effect: "Allow"
+                    Principal: 
+                      Service: 
+                        - "ec2.amazonaws.com"
+                    Action: 
+                      - "sts:AssumeRole"
+            Path: "/"
+            {% if iam_role_policies %}
+            Policies:
+                {% for policy in iam_role_policies %}
+                - {{ policy }}
+                {% endfor %}
+            {% endif %}
+
+    IamInstanceProfile:
+        Type: "AWS::IAM::InstanceProfile"
+        Properties:
+            Path: "/{{_env.name}}/{{_env.stage}}/"
+            Roles:
+                - {Ref: IamRole}
+
     # For ASG notifications
     NotificationTopic:
         Type: "AWS::SNS::Topic"
-
 
     ElbSecurityGroup:
         Type: "AWS::EC2::SecurityGroup"
@@ -145,6 +172,7 @@ resources:
             EbsOptimized: {{ebs_optimized}}
             ImageId: {{ami_id or image_id}}
             InstanceType: {{instance_type}}
+            IamInstanceProfile: {Ref: IamInstanceProfile}
             KeyName: {{key_name}}
             SecurityGroups:
                 - Ref: InstanceSecurityGroup
