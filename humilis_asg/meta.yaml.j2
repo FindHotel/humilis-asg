@@ -185,3 +185,9 @@ meta:
             description:
                 A list of IAM policy docs to associate to the instance profile
             value: []
+
+        scheduled_actions:
+            description:
+                A list of AWS::AutoScaling::ScheduledAction. These are dicts
+                with keys recurrence, min_size, max_size, desired_capacity.
+            value: []

@@ -336,3 +336,24 @@ resources:
         SubnetId: {{subnet_id or subnet}}
         SecurityGroups: [{Ref: MountTargetSecurityGroup}]
     {% endif %}
+
+    {% if scheduled_actions %}
+    {% for action in scheduled_actions %}
+    ScheduledAction{{loop.index}}:
+      Type: "AWS::AutoScaling::ScheduledAction"
+      Properties:
+        AutoScalingGroupName: {Ref: Asg}
+        {% if action.max_size %}
+        MaxSize: {{action.max_size}}
+        {% endif %}
+        {% if action.min_size %}
+        MinSize: {{action.min_size}}
+        {% endif %}
+        {% if action.desired_capacity %}
+        DesiredCapacity: {{action.desired_capacity}}
+        {% endif %}
+        {% if action.recurrence %}
+        Recurrence: {{action.recurrence}}
+        {% endif %}
+    {% endfor %}
+    {% endif %}
