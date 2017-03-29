@@ -48,3 +48,8 @@ outputs:
             Name of the autoscaling group
         Value:
             Ref: Asg
+    ResizeAsgPolicy:
+        Description:
+            The Managed IAM policy that grants permission to resize the ASG
+        Value:
+            {Ref: ResizeAsgPolicy}

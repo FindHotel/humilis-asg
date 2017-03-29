@@ -308,6 +308,25 @@ resources:
                     - "autoscaling:EC2_INSTANCE_TERMINATE"
                     - "autoscaling:EC2_INSTANCE_TERMINATE_ERROR"
 
+    ResizeAsgPolicy:
+        Type: "AWS::IAM::ManagedPolicy"
+        Properties:
+            Description: "Policy that allows setting the desired capacity of autoscaling groups."
+            Path: "/{{_env.name}}/{{_env.stage.lower()}}/"
+            {% if iam_resize_users %}
+            Users:
+                {% for user in iam_resize_users %}
+                - {{user}}
+                {% endfor %}
+            {% endif %}
+            PolicyDocument:
+                Version: "2012-10-17"
+                Statement:
+                    - Effect: Allow
+                      Action: "autoscaling:SetDesiredCapacity"
+                      # Autoscaling does not support anything else than *
+                      Resource: "*"
+
     {% if efs_mount_point %}
     FileSystem:
         Type: "AWS::EFS::FileSystem"
