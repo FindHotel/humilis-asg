@@ -4,6 +4,12 @@ meta:
         Autoscaling Group behind a Load Balancer
 
     parameters:
+        termination_protection:
+            description:
+                Set to yes if you want to protect the layer from being deleted.
+            value:
+                no
+
         vpc_id:
             description:
                 The ID of the target VPC
