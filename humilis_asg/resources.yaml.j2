@@ -9,7 +9,7 @@
 {% else %}
 {% set instance_name = _env.name + "-" + _env.stage.lower() + "-" + _layer.name %}
 {% endif %}
-{% if efs_owner and not efs_mount_point %}
+{% if (efs_owner or efs_id) and not efs_mount_point %}
 {% set efs_mount_point = "/efs" %}
 {% endif %}
 resources:
@@ -328,6 +328,7 @@ resources:
                       Resource: "*"
 
     {% if efs_mount_point %}
+    {% if not efs_id %}
     FileSystem:
         Type: "AWS::EFS::FileSystem"
         Properties:
@@ -335,6 +336,7 @@ resources:
             FileSystemTags:
                 - Key: Name
                   Value: "{{instance_name}}"
+    {% endif %}
 
     MountTargetSecurityGroup:
         Type: "AWS::EC2::SecurityGroup"
@@ -350,7 +352,11 @@ resources:
     MountTarget:
       Type: "AWS::EFS::MountTarget"
       Properties:
+        {% if not efs_id %}
         FileSystemId: {Ref: FileSystem}
+        {% else %}
+        FileSystemId: {{efs_id}}
+        {% endif %}
         # The subnet parameter was deprecated for the subnet_id parameter
         SubnetId: {{subnet_id or subnet}}
         SecurityGroups: [{Ref: MountTargetSecurityGroup}]

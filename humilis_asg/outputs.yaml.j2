@@ -36,7 +36,7 @@ outputs:
                 - Elb
                 - DNSName
     {% endif %}
-    {% if has_efs %}
+    {% if (efs_owner or efs_mount_point and not efs_id) %}
     FileSystem:
         Description:
             Physical ID of the Elastic File Instance

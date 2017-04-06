@@ -7,7 +7,7 @@ humilis-asg:
         - layer: vpc
           layer_type: vpc
 
-        - layer: asg
+        - layer: asg1
           layer_type: asg
           key_name: deployment
           vpc_id:
@@ -27,5 +27,30 @@ humilis-asg:
                  call:
                      method: get_ami_by_name
                      args:
-                         - "ubuntu-bastion-1483012150"
+                         - "bastion"
+                 output_attribute: id
+
+        - layer: asg2
+          layer_type: asg
+          key_name: deployment
+          vpc_id:
+              $layer_output: {layer_name: vpc, output_name: VpcId}
+          subnet_id:
+              $layer_output: {layer_name: vpc, output_name: PublicSubnet1}
+          health_check_target: "TCP:22"
+          instance_type: m4.large
+          bid: 0.03
+          subdomain: humilis-asg
+          domain: fih.io
+          hosted_zone_id: ZA1RMNBD0PCSQ
+          efs_mount_point: /efs
+          efs_id:
+              $layer_output: {layer_name: asg1, output_name: FileSystem}
+          image_id:
+              $boto3:
+                 service: ec2
+                 call:
+                     method: get_ami_by_name
+                     args:
+                         - "bastion"
                  output_attribute: id
