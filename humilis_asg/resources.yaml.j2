@@ -368,7 +368,7 @@ resources:
 
     {% if scheduled_actions %}
     {% for action in scheduled_actions %}
-    ScheduledAction{{loop.index}}:
+    ScheduledAction{{action['recurrence'].replace(' ', 'x').replace('*', 's').replace('-', 'o')}}:
       Type: "AWS::AutoScaling::ScheduledAction"
       Properties:
         AutoScalingGroupName: {Ref: Asg}
