@@ -176,6 +176,9 @@ resources:
             KeyName: {{key_name}}
             SecurityGroups:
                 - Ref: InstanceSecurityGroup
+                {% if efs_security_group %}
+                - {{efs_security_group}}
+                {% endif %}
             {% if spot_price %}
             SpotPrice: {{spot_price}}
             {% endif %}
@@ -189,11 +192,7 @@ resources:
                             - "exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1\n"
                             - "sudo mkdir {{efs_mount_point}}\n"
                             - "sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2"
-                            {% if efs_id %}
                             - " {{efs_id}}"
-                            {% else %}
-                            - {"Fn::Join": ["", [" ", {Ref: FileSystem}]]}
-                            {% endif %}
                             - ".efs."
                             - {Ref: "AWS::Region"}
                             - ".amazonaws.com:/   {{efs_mount_point}}\n"
@@ -286,9 +285,6 @@ resources:
 
     Asg:
         Type: "AWS::AutoScaling::AutoScalingGroup"
-        {% if efs_mount_point %}
-        DependsOn: MountTarget 
-        {% endif %}
         Properties:
             DesiredCapacity: {{desired_capacity}}
             Tags:
@@ -330,41 +326,6 @@ resources:
                       Action: "autoscaling:SetDesiredCapacity"
                       # Autoscaling does not support anything else than *
                       Resource: "*"
-
-    {% if efs_mount_point %}
-    {% if not efs_id %}
-    FileSystem:
-        Type: "AWS::EFS::FileSystem"
-        Properties:
-            PerformanceMode: generalPurpose
-            FileSystemTags:
-                - Key: Name
-                  Value: "{{instance_name}}"
-    {% endif %}
-
-    MountTargetSecurityGroup:
-        Type: "AWS::EC2::SecurityGroup"
-        Properties:
-            VpcId: {{vpc_id or vpc}}
-            GroupDescription: "{{instance_name}} EFS secgroup"
-            SecurityGroupIngress:
-                - IpProtocol: tcp
-                  FromPort: 2049
-                  ToPort: 2049
-                  SourceSecurityGroupId: {Ref: InstanceSecurityGroup}
-
-    MountTarget:
-      Type: "AWS::EFS::MountTarget"
-      Properties:
-        {% if not efs_id %}
-        FileSystemId: {Ref: FileSystem}
-        {% else %}
-        FileSystemId: {{efs_id}}
-        {% endif %}
-        # The subnet parameter was deprecated for the subnet_id parameter
-        SubnetId: {{subnet_id or subnet}}
-        SecurityGroups: [{Ref: MountTargetSecurityGroup}]
-    {% endif %}
 
     {% if scheduled_actions %}
     {% for action in scheduled_actions %}
