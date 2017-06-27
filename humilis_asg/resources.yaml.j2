@@ -21,15 +21,15 @@ resources:
     IamRole:
         Type: "AWS::IAM::Role"
         Properties:
-            AssumeRolePolicyDocument: 
+            AssumeRolePolicyDocument:
                 Version: "2012-10-17"
                 Statement:
                   -
                     Effect: "Allow"
-                    Principal: 
-                      Service: 
+                    Principal:
+                      Service:
                         - "ec2.amazonaws.com"
-                    Action: 
+                    Action:
                       - "sts:AssumeRole"
             Path: "/"
             {% if iam_role_policies %}
@@ -164,7 +164,7 @@ resources:
         Type: "AWS::AutoScaling::LaunchConfiguration"
         DependsOn: InstanceSecurityGroup
         Properties:
-            # We need to associate a public IP address or the instance 
+            # We need to associate a public IP address or the instance
             # will not be able to access the internet. A better alternative
             # would be to set up a NAT, but for now this will do.
             AssociatePublicIpAddress: Yes
@@ -275,7 +275,7 @@ resources:
             Subnets:
                 - {{subnet_id or subnet}}
             HealthCheck:
-                Target: {{health_check_target}} 
+                Target: {{health_check_target}}
                 HealthyThreshold: 3
                 UnhealthyThreshold: 5
                 Interval: 30
@@ -325,7 +325,18 @@ resources:
                     - Effect: Allow
                       Action: "autoscaling:SetDesiredCapacity"
                       # Autoscaling does not support anything else than *
-                      Resource: "*"
+                      Resource:
+                        "Fn::Join":
+                            - ""
+                            -
+                                - "arn:aws:autoscaling:"
+                                - {Ref: "AWS::Region"}
+                                - ":"
+                                - {"Ref": "AWS::AccountId"}
+                                - ":autoScalingGroup:"
+                                - "*"
+                                - ":autoScalingGroupName/"
+                                - Ref: Asg
 
     {% if scheduled_actions %}
     {% for action in scheduled_actions %}
