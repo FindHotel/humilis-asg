@@ -11,6 +11,9 @@ humilis-asg:
         - layer: asg1
           layer_type: asg
           key_name: deployment
+          environment:
+            A: b
+            C: d
           efs_id:
               $layer_output: {layer_name: vpc, output_name: FileSystem}
           efs_security_group:

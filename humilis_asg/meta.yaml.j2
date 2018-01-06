@@ -4,6 +4,10 @@ meta:
         Autoscaling Group behind a Load Balancer
 
     parameters:
+        environment:
+            description: Envvars to initialise in the instance
+            value: {}
+
         termination_protection:
             description:
                 Set to yes if you want to protect the layer from being deleted.
