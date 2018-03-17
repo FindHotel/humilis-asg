@@ -24,7 +24,7 @@ humilis-asg:
               $layer_output: {layer_name: vpc, output_name: PublicSubnet1}
           health_check_target: "TCP:22"
           instance_type: m4.large
-          bid: 0.03
+          spot_price: 0.03
           subdomain: humilis-asg
           domain: fih.io
           hosted_zone_id: ZA1RMNBD0PCSQ
