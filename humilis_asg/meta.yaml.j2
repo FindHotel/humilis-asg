@@ -33,7 +33,7 @@ meta:
             value:
 
 
-        # For backwards compatibility, use subnet_id instead 
+        # For backwards compatibility, use subnet_id instead
         subnet:
             description:
                 The ID of the target subnet.
@@ -168,7 +168,8 @@ meta:
 
         bootstrap_s3_path:
             description:
-                The S3 location of the bootstrapping Bash script
+                The S3 location of the bootstrapping Bash script.
+                Only compatible with unix debian distribution for now.
             value:
                 {% if bootstrap_path %}
                 # Horrible horrible hack... please fix it
@@ -190,7 +191,7 @@ meta:
         efs_owner:
             description:
                 The username that will own the EFS. If not provided, the EFS
-                will be owned by root (or whatever username is used to run 
+                will be owned by root (or whatever username is used to run
                 the user data during instance launch).
             value:
 
