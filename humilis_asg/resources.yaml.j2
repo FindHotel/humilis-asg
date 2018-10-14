@@ -206,6 +206,13 @@ resources:
                             {% else %}
                             - "chown $(whoami):$(whoami) {{efs_mount_point}}\n"
                             {% endif %}
+                            {% for device in block_devices %}
+                            - "mkfs -t ext4 /dev/{{device}}"
+                            - "mkdir /{{device}}"
+                            - "mount /dev/{{device}} {{device}}"
+                            - "mkdir /dev/{{device}}/tmp"
+                            - "chmod 777 /{{device}} -R"
+                            {% endfor %}
                             {% if bootstrap_s3_path %}
                             - "apt-get -y update\n"
                             - "DEBIAN_FRONTEND=noninteractive apt-get upgrade -yq\n"

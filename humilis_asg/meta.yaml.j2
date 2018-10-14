@@ -4,6 +4,10 @@ meta:
         Autoscaling Group behind a Load Balancer
 
     parameters:
+        block_devices:
+            description: a list of block devices to mount in the instance
+            value: []
+
         environment:
             description: Envvars to initialise in the instance
             value: {}
