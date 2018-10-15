@@ -207,11 +207,11 @@ resources:
                             - "chown $(whoami):$(whoami) {{efs_mount_point}}\n"
                             {% endif %}
                             {% for device in block_devices %}
-                            - "mkfs -t ext4 /dev/{{device}}"
-                            - "mkdir /{{device}}"
-                            - "mount /dev/{{device}} {{device}}"
-                            - "mkdir /dev/{{device}}/tmp"
-                            - "chmod 777 /{{device}} -R"
+                            - "mkfs -t ext4 /dev/{{device}}\n"
+                            - "mkdir /{{device}}\n"
+                            - "mount /dev/{{device}} {{device}}\n"
+                            - "mkdir /dev/{{device}}/tmp\n"
+                            - "chmod 777 /{{device}} -R\n"
                             {% endfor %}
                             {% if bootstrap_s3_path %}
                             - "apt-get -y update\n"
