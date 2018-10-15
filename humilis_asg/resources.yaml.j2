@@ -208,10 +208,9 @@ resources:
                             {% endif %}
                             {% for device in block_devices %}
                             - "mkfs -t ext4 /dev/{{device}}\n"
-                            - "mkdir /{{device}}\n"
-                            - "mount /dev/{{device}} {{device}}\n"
-                            - "mkdir /dev/{{device}}/tmp\n"
-                            - "chmod 777 /{{device}} -R\n"
+                            - "mkdir -p /mnt/{{device}}\n"
+                            - "mount /dev/{{device}} /mnt/{{device}}\n"
+                            - "chmod 777 /mnt/{{device}}\n"
                             {% endfor %}
                             {% if bootstrap_s3_path %}
                             - "apt-get -y update\n"
