@@ -14,9 +14,11 @@
 {% endif %}
 resources:
     # An S3 bucket to store ELB access logs
+    {% if logging_enabled %}
     Bucket:
         Type: "AWS::S3::Bucket"
         Properties: {}
+    {% endif %}
 
     IamRole:
         Type: "AWS::IAM::Role"
@@ -98,6 +100,7 @@ resources:
                   SourceSecurityGroupId: {{sg}}
                 {% endfor %}
 
+    {% if logging_enabled %}
     S3LoggingBucketPolicy:
         Type: "AWS::S3::BucketPolicy"
         Properties:
@@ -120,6 +123,7 @@ resources:
                             - { "Fn::FindInMap" : [ "ElbAccountIdMap", { "Ref" : "AWS::Region" }, "AccountId"]}
                       Action:
                         "s3:*"
+    {% endif %}
 
     {% if domain and not ssl_certificate_id %}
     # Create a SSL certificate for HTTPS
@@ -268,8 +272,11 @@ resources:
     {% endif %}
     Elb:
         Type: "AWS::ElasticLoadBalancing::LoadBalancer"
+        {% if logging_enabled %}
         DependsOn: S3LoggingBucketPolicy
+        {% endif %}
         Properties:
+            {% if logging_enabled %}
             AccessLoggingPolicy:
                 EmitInterval: 60
                 Enabled: {{logging_enabled}}
@@ -277,6 +284,7 @@ resources:
                     Ref: Bucket
                 S3BucketPrefix:
                     "elb-logs/elb"
+            {% endif %}
             Listeners:
                 {% for listener in listeners %}
                 {% if not (listener.protocol in ('ssl', 'https', 'HTTPS', 'SSL') and not domain) %}

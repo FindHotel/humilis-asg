@@ -82,6 +82,6 @@ See [License file][LICENSE].
 [LICENSE]: https://github.com/humilis/humilis-asg/blob/master/LICENSE.txt
 
 
-© 2017 German Gomez-Herrero, [Find Hotel][fh] and others.
+© 2020 German Gomez-Herrero, [Find Hotel][fh] and others.
 
 [fh]: http://company.findhotel.net
