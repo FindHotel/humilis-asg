@@ -1,10 +1,12 @@
 ---
 outputs:
+    {% if logging_enabled %}
     BucketName:
         Description:
             The name of the S3 bucket where logs will be stored
         Value:
             Ref: Bucket
+    {% endif %}
     ElbSecurityGroup:
         Description:
             The ID of the Elastic Load Balancer security group
